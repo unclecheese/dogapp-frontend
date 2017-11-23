@@ -8,12 +8,22 @@ import NotFavourite from 'material-ui-icons/FavoriteBorder';
 class FavouriteToggleButton extends React.Component {
 
   handleClick = () => {
-    const { mutate, dogID, favourite } = this.props;
+    const { mutate, dogID, favourite   } = this.props;
+    const optimisticResponse = {
+      __typename: 'Mutation',
+      toggleFavourite: {
+        __typename: 'Dog',
+        IsFavourite: favourite,
+        ID: dogID,
+      }
+    };
+    console.log('mutating with optimistic response', optimisticResponse);
     mutate({
       variables: {
         DogID: dogID,
         Favourite: favourite
-      }
+      },
+      optimisticResponse,
     });
   };
 
@@ -31,10 +41,13 @@ const UnfavouriteMutation = gql`
   mutation createFavourite($DogID: ID!, $Favourite: Boolean!) {
     toggleFavourite(DogID: $DogID, Favourite: $Favourite) {    
       ID
+      IsFavourite
     }
   }
 `;
 
-const FavouriteToggleButtonWithMutation = graphql(UnfavouriteMutation)(FavouriteToggleButton);
+const FavouriteToggleButtonWithMutation = graphql(UnfavouriteMutation, {
+
+})(FavouriteToggleButton);
 
 export default FavouriteToggleButtonWithMutation;
