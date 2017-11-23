@@ -3,6 +3,7 @@ import { graphql } from 'react-apollo';
 import gql from 'graphql-tag';
 import { withStyles } from 'material-ui/styles';
 import { CircularProgress } from 'material-ui/Progress';
+import LoadMoreButton from '../ui/LoadMoreButton';
 import DogCard from './DogCard';
 
 const styles = theme => ({
@@ -11,14 +12,21 @@ const styles = theme => ({
   },
 });
 
+const DOGS_PER_PAGE = 20;
+
 const DogQuery = gql`
-query readDogs {
-  readDogs {
+query readDogs ($limit: Int, $offset: Int) {
+  readDogs(limit: $limit, offset: $offset) {
     edges {
       node {
         ID
         Name
         Thumbnail
+        IsFavourite
+        FavouritingMembers {
+          ID
+          Name
+        }
         Breed {
           Name
         }
@@ -27,13 +35,16 @@ query readDogs {
         }
       }
     }
+    pageInfo {
+      hasNextPage
+    }
   }
 }
 `;
 
 class DogList extends Component {
   render () {
-    const { classes, data: { loading, readDogs } } = this.props;
+    const { classes, loading, readDogs, loadMoreDogs } = this.props;
 
     if (loading) {
       return <CircularProgress className={classes.progress} />;
@@ -43,12 +54,54 @@ class DogList extends Component {
       <DogCard {...edge.node} key={edge.node.ID}/>
     ));
 
+    if (readDogs.pageInfo.hasNextPage) {
+      result.push(
+        <LoadMoreButton key="__load-more__" loadMore={loadMoreDogs} />
+      );
+    }
+
     return result;
   }
 }
 const DogListWithStyles = withStyles(styles)(DogList);
 
-const DogListWithData = graphql(DogQuery)(DogListWithStyles);
+const DogListWithData = graphql(DogQuery, {
+  options() {
+    return {
+      variables: {
+        limit: DOGS_PER_PAGE,
+        offset: 0
+      }
+    }
+  },
+  props({ data: { loading, readDogs, fetchMore } }) {
+    return {
+      loading,
+      readDogs,
+      loadMoreDogs() {
+        return fetchMore({
+          variables: {
+            offset: readDogs.edges.length,
+          },
+          updateQuery(previousResult, { fetchMoreResult }) {
+            if (!fetchMoreResult) return previousResult;
+
+            return {
+              ...previousResult,
+              readDogs: {
+                ...fetchMoreResult.readDogs,
+                edges: [
+                  ...previousResult.readDogs.edges,
+                  ...fetchMoreResult.readDogs.edges
+                ]
+              }
+            };
+          },
+        })
+      }
+    }
+  }
+})(DogListWithStyles);
 
 export default DogListWithData;
 

@@ -22,7 +22,7 @@ class App extends Component {
         </AppBar>
         <div className="grid">
           <DogList />
-        </div>;
+        </div>
       </div>
     );
   }
