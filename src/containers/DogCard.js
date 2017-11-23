@@ -1,16 +1,12 @@
 import React, { Component } from 'react';
 import GalleryCard from '../ui/GalleryCard';
-import IconButton from 'material-ui/IconButton';
-import Favourite from 'material-ui-icons/Favorite';
-import NotFavourite from 'material-ui-icons/FavoriteBorder';
+import FavouriteToggleButton from './FavouriteToggleButton';
 
 class DogCard extends Component {
   render () {
-    const { Name, Thumbnail, Owner, Breed, IsFavourite, FavouritingMembers } = this.props;
+    const { ID, Name, Thumbnail, Owner, Breed, IsFavourite, FavouritingMembers } = this.props;
     const actions = [
-      IsFavourite
-        ? <IconButton key="favourite"><Favourite /></IconButton>
-        : <IconButton key="favourite"><NotFavourite /></IconButton>
+      <FavouriteToggleButton key="favourite" dogID={ID} favourite={!IsFavourite} />
     ];
 
     const favouritesList = FavouritingMembers.map(fave => fave.Name).join(', ');
